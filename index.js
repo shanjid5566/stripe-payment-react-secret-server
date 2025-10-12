@@ -6,20 +6,27 @@ const Stripe = require("stripe");
 const app = express();
 
 app.use(express.json());
-app.use(cors());
+app.use(
+  cors({
+    origin: "http://localhost:5173",
+    methods: ["GET", "POST", "PUT", "DELETE"],
+    credentials: true,
+  })
+);
 
-const stripe = Stripe(process.env.SECRET_KEY);
+const stripe = Stripe(process.env.STRIPE_SECRET_KEY);
 
 app.post("/create-payment-intent", async (req, res) => {
   try {
-    const { amount = 1099, currency = "usd" } = req.body;
+    const { amount = 11099, currency = "usd" } = req.body; // amount in cents
     const intent = await stripe.paymentIntents.create({
       amount,
       currency,
       automatic_payment_methods: { enabled: true },
     });
-  } catch (err) {
-    res.status(400).json({ error: err.message });
+    res.json({ clientSecret: intent.client_secret });
+  } catch (e) {
+    res.status(400).json({ error: e.message });
   }
 });
 const PORT = process.env.PORT || 4000;
